@@ -1,61 +1,73 @@
-
+from email.mime import image
 import pygame
 from pygame.locals import *
-from setting import *
+import setting
 import sys
-from spaceship import Spaceship
 
+clock=pygame.time.Clock()
+player_grp=pygame.sprite.Group()
+bullet_grp=pygame.sprite.Group()
+cooldown=setting.bulletcd
 
+screen=pygame.display.set_mode((setting.WIDTH,setting.HEIGHT))
 
 #Loading images
+bg=pygame.image.load("../src/img/bg.jpg")
+bg=pygame.transform.scale(bg,(setting.WIDTH,setting.HEIGHT))
 
-bg=pygame.image.load('../src/img/bg.jpg')
-bg=pygame.transform.scale(bg,(WIDTH,HEIGHT))
-#Groups
-
-spaceship_group=pygame.sprite.Group()
-bullet_group = pygame.sprite.Group()
-
-class Game:
-    def __init__(self):
-        pygame.init()
-        self.screen=pygame.display.set_mode((WIDTH,HEIGHT))
-        self.clock=pygame.time.Clock()
-        pygame.display.set_caption('Space invaders')
-
-        self.player=Spaceship(WIDTH//2,HEIGHT-100)
-        spaceship_group.add(self.player)
-
-    def run(self):
-        while run:
-            for event in pygame.event.get():
-                if event.type==pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-            self.draw_bg()
-            #Drawing groups
-
-            spaceship_group.draw(self.screen)
-            bullet_group.draw(self.screen)
+class Bullets(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image=pygame.image.load('../src/img/bullet.png')
+        self.image=pygame.transform.scale(self.image,(10,10))
+        self.rect=self.image.get_rect()
+        self.rect.center=[x,y]
+        
+    def update(self):
+        self.rect.y-=setting.bullet_speed
 
 
+class Player(pygame.sprite.Sprite):
+    def __init__(self,x,y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image=pygame.image.load('../src/img/spaceship.png')
+        self.image=pygame.transform.scale(self.image,(setting.shipsizex,setting.shipsizey))
+        self.rect=self.image.get_rect()
+        self.rect.center=[x,y]
+        self.time=pygame.time.get_ticks()
 
-            #Updating groups
+    def update(self):
+        key=pygame.key.get_pressed()
+        if key[pygame.K_LEFT]:
+            self.rect.x-=setting.spaceship_speed
+        if key[pygame.K_RIGHT]:
+            self.rect.x+=setting.spaceship_speed
+        if key[pygame.K_SPACE] and pygame.time.get_ticks()-self.time>cooldown:
+            bullet=Bullets(self.rect.centerx,self.rect.top)
+            bullet_grp.add(bullet)
+            self.time=pygame.time.get_ticks()
 
-            spaceship_group.update()
-            bullet_group.update()
+#Functs
+def draw_bg():
+    screen.blit(bg,(0,0))
+
+player=Player((setting.WIDTH//2),(setting.HEIGHT-100))
+player_grp.add(player)
+
+while setting.run:
+    clock.tick(setting.fps)
+    for event in pygame.event.get():
+        if event.type==pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+    #Drawing
+    draw_bg()
+    player_grp.draw(screen)
+    bullet_grp.draw(screen)
 
 
+    #Updaing grps
+    player_grp.update()
+    bullet_grp.update()
 
-            pygame.display.update()
-            self.clock.tick(fps)
-
-
-    def draw_bg(self):
-        self.screen.blit(bg,(0,0))
-
-
-if __name__=='__main__':
-    game=Game()
-    game.run()        
+    pygame.display.update()

@@ -4,3 +4,6 @@ fps=60
 run=True
 spaceship_speed=5
 bullet_speed=10
+shipsizex=40
+shipsizey=40
+bulletcd=500 #ms
